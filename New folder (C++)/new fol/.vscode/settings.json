@@ -1,0 +1,14 @@
+{
+    "C_Cpp.errorSquiggles": "Disabled",
+    "files.associations": {
+        "iostream": "cpp",
+        "xstring": "cpp",
+        "vector": "cpp",
+        "xutility": "cpp"
+    },
+    "cSpell.words": [
+        "Azar",
+        "Mohsen",
+        "pypart"
+    ]
+}

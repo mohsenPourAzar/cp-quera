@@ -1,0 +1,19 @@
+{
+    "files.associations": {
+        "xstring": "cpp",
+        "xutility": "cpp",
+        "vector": "cpp",
+        "ostream": "cpp",
+        "iostream": "cpp",
+        "xtree": "cpp",
+        "map": "cpp",
+        "utility": "cpp",
+        "list": "cpp",
+        "unordered_map": "cpp",
+        "xhash": "cpp",
+        "string": "cpp"
+    },
+    "cSpell.words": [
+        "golestan"
+    ]
+}
