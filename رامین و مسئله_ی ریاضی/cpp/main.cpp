@@ -4,20 +4,23 @@ using namespace std;
 
 int main()
 {
-    int n,v=0;
-    int x[n];
-    cin >> n;
+    int q;
+    cin >> q;
 
-    while(n>0){
-            int r1,r2,count0;
-            cin >> r1 >> r2;
-            count0 = floor(sqrt(r2)) - floor(sqrt(r1-1));
-            x[v] = count0;
-            v++;
-            n--;
+    for(int i=0;i<q;i++){
+        int l,r;
+        cin >> l >> r;
+        int t = 0, num =1, res=0;
+        while(res <= r){
+            res = num * num;
+
+            if (l <= res && res <= r){
+                t++;
             }
-    for(int i=0;i<sizeof(x);i++){
-        cout << x[i] << endl;
+            num++;
+        }
+        cout << t << endl;
     }
+
     return 0;
 }

@@ -1,116 +1,107 @@
 #include <iostream>
 #include <string>
-#include <vector>
-#include <iterator>
-#include <algorithm>
-#include<unordered_map>
 using namespace std;
 
-int good = 0, count0 = 0;
 string text;
+int good = 0;
+int count0 = 0;
 
-void copy(string key, int c) {
-    string text0 = "";
-    for (int i = 0; i < c; i++) {
-        text0 += key;
-    }
-    text = text0 + text.substr(text0.length(), -1);
-}
+int countFreq(string pat, string txt) {
+    int m = pat.length();
+    int n = txt.length();
+    int count = 0;
 
-void compare(string key) {
-    if (text == key) {
-        good++;
-    }
-}
-
-int countFreq(string &pat, string &txt)
-{
-    int M = pat.length();
-    int N = txt.length();
-    int res = 0;
-
-    for (int i = 0; i <= N - M; i++)
-    {
-        int j;
-        for (j = 0; j < M; j++)
-            if (txt[i+j] != pat[j])
+    for (int i = 0; i <= n - m; i++) {
+        bool match = true;
+        for (int j = 0; j < m; j++) {
+            if (txt[i + j] != pat[j]) {
+                match = false;
                 break;
-        if (j == M) 
-        {
-           res++;
+            }
+        }
+        if (match) {
+            count++;
         }
     }
-    return res;
+
+    return count;
 }
 
-void substr(string key, int c) {
-   if(countFreq(key, text) == c){
-    good++;
-   }
-}
+int main() {
+    getline(cin, text);
 
+    string line;
+    while (getline(cin, line)) {
+        if (line[0] == 'I') {
+            break;
+        }
 
-void attach(string key, int c, string s) {
-    key += s;
-    if (countFreq(key, text) == c) {
-        good++;
-    }
-}
+        string parts[4];
+        int idx = 0;
+        string temp = "";
 
-void length(int c) {
-    if (text.length() == c) {
-        good++;
-    }
-}
+        for (int i = 0; i < line.length(); i++) {
+            if (line[i] == ' ') {
+                parts[idx] = temp;
+                idx++;
+                temp = "";
+            } else {
+                temp = temp + line[i];
+            }
+        }
 
-vector<string> string_split(string s, const char delimiter)
-{
-    size_t start=0;
-    size_t end=s.find_first_of(delimiter);
-    vector<string> output;
-    while (end <= string::npos)
-    {
-	    output.emplace_back(s.substr(start, end-start));
-
-	    if (end == string::npos)
-	    	break;
-
-    	start=end+1;
-    	end = s.find_first_of(delimiter, start);
-    }
-    return output;
-}
-
-int main()
-{
-    cin >> text;
-    string order;
-    getline(cin, order);
-    while (order[0] != 'I')
-    {
-        vector<string> con = string_split(order, ' ');
+        parts[idx] = temp;
         count0++;
-        if(con[0] == "copy"){
-            copy(con[1] ,stoi(con[2]));
-        }else if(con[0] == "compare"){
-            compare(con[1]);
-        }else if(con[0] == "substr"){
-            substr(con[1],stoi(con[2]));
-        }else if(con[0] == "attach"){
-            attach(con[1],stoi(con[2]),con[3]);
-        }else if(con[0] == "length"){
-            length(stoi(con[1]));
+
+        if (parts[0] == "copy") {
+            string result = "";
+            int times = stoi(parts[2]);
+            for (int i = 0; i < times; i++) {
+                result = result + parts[1];
+            }
+            string rest = "";
+            for (int i = result.length(); i < text.length(); i++) {
+                rest = rest + text[i];
+            }
+            text = result + rest;
         }
-        getline(cin, order);
+
+        else if (parts[0] == "compare") {
+            if (text == parts[1]) {
+                good++;
+            }
+        }
+
+        else if (parts[0] == "substr") {
+            int found = countFreq(parts[1], text);
+            int need = stoi(parts[2]);
+            if (found == need) {
+                good++;
+            }
+        }
+
+        else if (parts[0] == "attach") {
+            string full = parts[1] + parts[3];
+            int found = countFreq(full, text);
+            int need = stoi(parts[2]);
+            if (found == need) {
+                good++;
+            }
+        }
+
+        else if (parts[0] == "length") {
+            int len = stoi(parts[1]);
+            if (text.length() == len) {
+                good++;
+            }
+        }
     }
-    
-   
-    if (good >= ((int)count0 / 2)) {
+
+    if (good >= count0 / 2) {
         cout << "Eyval";
-    }
-    else {
+    } else {
         cout << "HeifShod";
     }
 
-
+    return 0;
 }
