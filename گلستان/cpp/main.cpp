@@ -1,388 +1,377 @@
-#include<iostream>
-#include<vector>
-#include<string>
-#include<algorithm>
-#include <iterator>
-#include<unordered_map>
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <string>
 #include <map>
 #include <iomanip>
-#include <limits>
+
 using namespace std;
-map<string,vector<string>>student;
-map<string,vector<string>>professor;
-map<string,vector<string>>klass;
 
-multimap<string, string>student_s;
-multimap<string, string>professor_s;
+class Person {
+public:
+    string name;
+    string identical_num;
+    string field;
 
-multimap<string, vector<string>> garde;
-
-multimap<string,string> top_grade;
-
-vector<string> string_split(string s, const char delimiter)
-{
-    size_t start=0;
-    size_t end=s.find_first_of(delimiter);
-    vector<string> output;
-    while (end <= string::npos)
-    {
-	    output.emplace_back(s.substr(start, end-start));
-
-	    if (end == string::npos)
-	    	break;
-
-    	start=end+1;
-    	end = s.find_first_of(delimiter, start);
+    Person(string name, string id, string field) {
+        this->name = name;
+        this->identical_num = id;
+        this->field = field;
     }
-    return output;
+
+    virtual ~Person() {}
+
+    static bool checkAndPrintDuplicate(string id, vector<Person*>& people) {
+        for (auto p : people) {
+            if (p->identical_num == id) {
+                cout << "this identical number previously registered" << endl;
+                return true;
+            }
+        }
+        cout << "welcome to golestan" << endl;
+        return false;
+    }
+
+    static class Student* findStudentByID(string id, const vector<Person*>& people);
+    static class Professor* findProfessorByID(string id, const vector<Person*>& people);
+};
+
+class Student : public Person {
+public:
+    string entering_year;
+
+    Student(string name, string id, string year, string field)
+        : Person(name, id, field) {
+        entering_year = year;
+    }
+};
+
+class Professor : public Person {
+public:
+    Professor(string name, string id, string field)
+        : Person(name, id, field) {}
+};
+
+class Class {
+public:
+    string name;
+    string class_id;
+    string field;
+    Professor professor;
+    vector<Student> students;
+    map<string, int> final_marks;
+
+    Class(string name, string id, string field, Professor prof)
+        : name(name), class_id(id), field(field), professor(prof) {}
+
+    static bool checkAndPrintDuplicate(string id, vector<Class*>& classes) {
+        for (auto c : classes) {
+            if (c->class_id == id) {
+                cout << "this class id previously used" << endl;
+                return true;
+            }
+        }
+        cout << "class added successfully" << endl;
+        return false;
+    }
+
+    static Class* findClassByID(string id, const vector<Class*>& classes) {
+        for (auto c : classes) {
+            if (c->class_id == id) {
+                return c;
+            }
+        }
+        return nullptr;
+    }
+
+    bool isStudentRegistered(string student_id) {
+        for (auto& s : students) {
+            if (s.identical_num == student_id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool hasProfessor() {
+        return professor.identical_num != "0000000000";
+    }
+
+    bool addStudent(Student* student) {
+        if (student->field != field) {
+            cout << "student field is not match" << endl;
+            return false;
+        }
+        if (isStudentRegistered(student->identical_num)) {
+            cout << "student is already registered" << endl;
+            return false;
+        }
+        students.push_back(*student);
+        cout << "student added successfully to the class" << endl;
+        return true;
+    }
+
+    bool addProfessor(Professor* prof) {
+        if (prof->field != field) {
+            cout << "professor field is not match" << endl;
+            return false;
+        }
+        if (hasProfessor()) {
+            cout << "this class has a professor" << endl;
+            return false;
+        }
+        professor = *prof;
+        cout << "professor added successfully to the class" << endl;
+        return true;
+    }
+
+    bool setFinalMark(Professor* prof, Student* student, int mark) {
+        if (professor.identical_num != prof->identical_num) {
+            cout << "professor class is not match" << endl;
+            return false;
+        }
+        if (!isStudentRegistered(student->identical_num)) {
+            cout << "student did not registered" << endl;
+            return false;
+        }
+        final_marks[student->identical_num] = mark;
+        cout << "student final mark added or changed" << endl;
+        return true;
+    }
+
+    void printStudentMark(const string& student_id) {
+        if (!isStudentRegistered(student_id)) {
+            cout << "student did not registered" << endl;
+            return;
+        }
+        if (final_marks.find(student_id) == final_marks.end()) {
+            cout << "None" << endl;
+            return;
+        }
+        cout << final_marks[student_id] << endl;
+    }
+
+    void printMarkList() {
+        if (!hasProfessor()) {
+            cout << "no professor" << endl;
+            return;
+        }
+        if (students.empty()) {
+            cout << "no student" << endl;
+            return;
+        }
+        for (auto& student : students) {
+
+            if (final_marks.find(student.identical_num) != final_marks.end()) {
+                cout << final_marks[student.identical_num] << " ";
+            } else {
+                cout << "None" << endl;
+            }
+        }
+        cout << endl;
+    }
+
+    void collectMarksByProfessor(const string& prof_id, vector<int>& marks) {
+        if (professor.identical_num != prof_id) return;
+        for (auto& entry : final_marks) {
+            marks.push_back(entry.second);
+        }
+    }
+
+    void collectMarksOfStudent(const string& student_id, vector<int>& marks) {
+        if (final_marks.find(student_id) != final_marks.end()) {
+            marks.push_back(final_marks[student_id]);
+        }
+    }
+};
+
+Student* Person::findStudentByID(string id, const vector<Person*>& people) {
+    for (auto p : people) {
+        Student* s = dynamic_cast<Student*>(p);
+        if (s && s->identical_num == id) return s;
+    }
+    return nullptr;
 }
 
-int main(){
-   
-    while (true)
-    {
-        string order;
-        getline(cin,order);
-        vector<string> o = string_split(order, ' ');
+Professor* Person::findProfessorByID(string id, const vector<Person*>& people) {
+    for (auto p : people) {
+        Professor* prof = dynamic_cast<Professor*>(p);
+        if (prof && prof->identical_num == id) return prof;
+    }
+    return nullptr;
+}
 
-        if(o[0] == "register_student"){
-            auto s = student.find(o[2]);
-            auto p = professor.find(o[2]);
-            if(s == student.end() && p == professor.end()){
-                student.insert(pair<string,vector<string>>(o[2],{o[1],o[3],o[4]}));
-                cout << "welcome to golestan"<<endl;
-            }else{
-                cout << "this identical number previously registered" << endl;
+int main() {
+    vector<Person*> people;
+    vector<Class*> classes;
+
+    while (true) {
+        string order;
+        getline(cin, order);
+
+        istringstream iss(order);
+        vector<string> tokens;
+        string word;
+        while (iss >> word) tokens.push_back(word);
+        if (tokens.empty()) continue;
+
+        if (tokens[0] == "register_student") {
+            if (!Person::checkAndPrintDuplicate(tokens[2], people))
+                people.push_back(new Student(tokens[1], tokens[2], tokens[3], tokens[4]));
+        }
+        else if (tokens[0] == "register_professor") {
+            if (!Person::checkAndPrintDuplicate(tokens[2], people))
+                people.push_back(new Professor(tokens[1], tokens[2], tokens[3]));
+        }
+        else if (tokens[0] == "make_class") {
+            if (!Class::checkAndPrintDuplicate(tokens[2], classes)) {
+                Professor dummy("none", "0000000000", "dummy");
+                classes.push_back(new Class(tokens[1], tokens[2], tokens[3], dummy));
             }
-        }else if(o[0] == "register_professor"){
-            auto s = student.find(o[2]);
-            auto p = professor.find(o[2]);
-            if(s == student.end() && p == professor.end()){
-                professor.insert(pair<string,vector<string>>(o[2],{o[1],o[3]}));
-                cout << "welcome to golestan"<<endl;
-            }else{
-                cout << "this identical number previously registered" << endl;
+        }
+        else if (tokens[0] == "add_student") {
+            Student* student = Person::findStudentByID(tokens[1], people);
+            Class* class_obj = Class::findClassByID(tokens[2], classes);
+            if (!student) { cout << "invalid student" << endl; continue; }
+            if (!class_obj) { cout << "invalid class" << endl; continue; }
+            class_obj->addStudent(student);
+        }
+        else if (tokens[0] == "add_professor") {
+            Professor* prof = Person::findProfessorByID(tokens[1], people);
+            Class* class_obj = Class::findClassByID(tokens[2], classes);
+            if (!prof) { cout << "invalid professor" << endl; continue; }
+            if (!class_obj) { cout << "invalid class" << endl; continue; }
+            class_obj->addProfessor(prof);
+        }
+        else if (tokens[0] == "student_status") {
+            Student* student = Person::findStudentByID(tokens[1], people);
+            if (!student) { cout << "invalid student" << endl; continue; }
+            cout << student->name << " " << student->entering_year << " " << student->field;
+            for (auto c : classes)
+                if (c->isStudentRegistered(tokens[1]))
+                    cout << " " << c->name;
+            cout << endl;
+        }
+        else if (tokens[0] == "professor_status") {
+            Professor* prof = Person::findProfessorByID(tokens[1], people);
+            if (!prof) { cout << "invalid professor" << endl; continue; }
+            cout << prof->name << " " << prof->field;
+            for (auto c : classes)
+                if (c->professor.identical_num == prof->identical_num)
+                    cout << " " << c->name;
+            cout << endl;
+        }
+        else if (tokens[0] == "class_status") {
+            Class* class_obj = Class::findClassByID(tokens[1], classes);
+            if (!class_obj) { cout << "invalid class" << endl; continue; }
+            cout << (class_obj->hasProfessor() ? class_obj->professor.name : "None") << " ";
+            for (size_t i = 0; i < class_obj->students.size(); ++i) {
+                cout << class_obj->students[i].name;
+                if (i + 1 < class_obj->students.size()) cout << " ";
             }
-        }else if(o[0] == "make_class"){
-            auto c = klass.find(o[2]);
-            if(c == klass.end()){
-                klass.insert(pair<string,vector<string>>(o[2],{o[1],o[3]}));
-                cout << "class added successfully"<< endl;
-            }else{
-                cout << "this class id previously used"<< endl;
+            if (!class_obj->students.empty()) cout << endl;
+        }
+        else if (tokens[0] == "set_final_mark") {
+            Professor* prof = Person::findProfessorByID(tokens[1], people);
+            Student* student = Person::findStudentByID(tokens[2], people);
+            Class* class_obj = Class::findClassByID(tokens[3], classes);
+            int mark = stoi(tokens[4]);
+            if (!prof) { cout << "invalid professor" << endl; continue; }
+            if (!student) { cout << "invalid student" << endl; continue; }
+            if (!class_obj) { cout << "invalid class" << endl; continue; }
+            class_obj->setFinalMark(prof, student, mark);
+        }
+        else if (tokens[0] == "mark_student") {
+            Student* student = Person::findStudentByID(tokens[1], people);
+            Class* class_obj = Class::findClassByID(tokens[2], classes);
+            if (!student) { cout << "invalid student" << endl; continue; }
+            if (!class_obj) { cout << "invalid class" << endl; continue; }
+            class_obj->printStudentMark(tokens[1]);
+        }
+        else if (tokens[0] == "mark_list") {
+            Class* class_obj = Class::findClassByID(tokens[1], classes);
+            if (!class_obj) { cout << "invalid class" << endl; continue; }
+            class_obj->printMarkList();
+        }
+        else if (tokens[0] == "average_mark_professor") {
+            Professor* prof = Person::findProfessorByID(tokens[1], people);
+            if (!prof) { cout << "invalid professor" << endl; continue; }
+            vector<int> marks;
+            for (auto c : classes) {
+                c->collectMarksByProfessor(prof->identical_num, marks);
             }
-        }else if(o[0] == "add_student"){
-            int i =0;
-            if(student.find(o[1]) == student.end()){
-                cout << "invalid student"<< endl;
-                i++;
-            }
-            if(klass.find(o[2]) == klass.end()){
-                cout << "invalid class"<< endl;
-                i++;
-            }
-            if(klass.find(o[2])->second[1] != student.find(o[1])->second[2]){
-                cout << "student field is not match" << endl;
-                i++;
-            }
-            for(auto s_s=student_s.begin();s_s!=student_s.end();s_s++){
-                if(s_s->first == o[1] && s_s->second == o[2]){
-                    cout << "student is already registered" << endl;
-                    i++;
-                }
-            }
-            if(i == 0){
-                student_s.insert(pair<string, string>(o[1],o[2]));
-                cout << "student added successfully to the class" << endl;
-            }
-        }else if(o[0] == "add_professor"){
-            int j = 0;
-            if(professor.find(o[1]) == professor.end()){
-                cout << "invalid professor"<< endl;
-                j++;
-            }
-            if(klass.find(o[2]) == klass.end()){
-                cout << "invalid class"<< endl;
-                j++;
-            }
-            if(klass.find(o[2])->second[1] != professor.find(o[1])->second[1]){
-                cout << "professor field is not match" << endl;
-                j++;
-            }
-            for(auto s_p=professor_s.begin();s_p != professor_s.end();s_p++){
-                if(s_p->second == o[2]){
-                    cout << "this class has a professor" << endl;
-                    j++;
-                }
-            }
-            if(j == 0){              
-                professor_s.insert(pair<string, string>(o[1],o[2]));
-                cout << "professor added successfully to the class" << endl;
-            }
-        }else if(o[0] == "student_status"){
-            auto s = student.find(o[1]);
-            if(s == student.end()){
-                cout << "invalid student"<< endl;
-            }else{
-                for(auto &p : s->second){
-                    cout << p << " ";
-                }
-                for(auto &a_s : student_s){
-                    if(a_s.first == o[1]){
-                        auto c = klass.find(a_s.second);
-                        if(c != klass.end()){
-                            cout << c->second[0] << " ";
-                        }
-                    }
-                }
-                cout << endl;
-            }
-        }else if(o[0] == "professor_status"){
-            auto p = professor.find(o[1]);
-            if(p == professor.end()){
-                cout << "invalid professor"<< endl;
-            }else{
-                for(auto &p : p->second){
-                    cout << p << " ";
-                }
-                for(auto &a_p : professor_s){
-                    if(a_p.first == o[1]){
-                        auto c = klass.find(a_p.second);
-                        if(c != klass.end()){
-                            cout << c->second[0] << " ";
-                        }
-                    }
-                }
-                cout << endl;
-            }
-        }else if(o[0] == "class_status"){
-            auto c = klass.find(o[1]);
-            int k = 0 ;
-            if(c == klass.end()){
-                cout << "invalid class "<< endl;
-            }else{
-                for(auto &a_p : professor_s){
-                    if(a_p.second == o[1]){
-                        auto c = professor.find(a_p.first);
-                        if(c != professor.end()){
-                            cout << c->second[0] << " ";
-                            k++;
-                        }
-                    }
-                }
-                if(k == 0){
-                    cout << "None" << " ";
-                }
-                for(auto &a_s : student_s){
-                    if(a_s.second == o[1]){
-                        auto c = student.find(a_s.first);
-                        if(c != student.end()){
-                            cout << c->second[0] << " ";
-                        }
-                    }
-                }
-                cout << endl;
-            }
-        }else if(o[0] == "set_final_mark"){
-            int b = 0;
-            auto p = professor.find(o[1]);
-            if(p == professor.end()){
-                cout << "invalid professor"<< endl;
-                b++;
-            }
-            auto s = student.find(o[2]);
-            if(s == student.end()){
-                cout << "invalid student"<< endl;
-                b++;
-            }
-            auto c = klass.find(o[3]);
-            if(c == klass.end()){
-                cout << "invalid class "<< endl;
-                b++;
-            }
-            for(auto &s_p : professor_s){
-                if(s_p.first == o[1] && s_p.second != o[3]){
-                    cout << "professor class is not match" << endl;
-                    b++;
-                }
-            }
-            for(auto &s_s : student_s){
-                if(s_s.first != o[2] && s_s.second != o[3]){
-                    cout << " student did not registered" << endl;
-                    b++;
-                }
-            }
-            if(b == 0){
-                int n = 0;
-                for(auto &g_s : garde){
-                    if(g_s.first == o[2]){
-                        if(g_s.second[0] == o[1] && g_s.second[1] == o[3]){
-                            garde.erase(g_s);
-                            garde.insert(pair<string,vector<string>>(o[2],{o[1],o[3],o[4]}));
-                            n++;
-                            cout << "student final mark added or changed" << endl;
-                        }
-                    }
-                }
-                if(n == 0){
-                    garde.insert(pair<string,vector<string>>(o[2],{o[1],o[3],o[4]}));
-                    cout << "student final mark added or changed" << endl;
-                }
-            }               
-        }else if(o[0] == "mark_student"){
-            int e = 0;
-            auto s = student.find(o[1]);
-            if(s == student.end()){
-                cout << "invalid student"<< endl;
-                e++;
-            }
-            auto c = klass.find(o[2]);
-            if(c == klass.end()){
-                cout << "invalid class"<< endl;
-                e++;
-            }
-            for(auto &s_s : student_s){
-                if(s_s.first == o[2] && s_s.second != o[3]){
-                    cout << " student did not registered" << endl;
-                    e++;
-                }
-            }
-            int fi = 0;
-            for(auto &g_g : garde){
-                if(g_g.second[1] == o[2] && g_g.first == o[1]){
-                    fi++;
-                }
-            }
-            if(fi == 0){
+            if (marks.empty()) {
                 cout << "None" << endl;
+            } else {
+                double sum = 0;
+                for (int m : marks) sum += m;
+                cout << fixed << setprecision(2) << (sum / marks.size()) << endl;
             }
-            if(e == 0){
-                for(auto &g_s : garde){
-                    if(g_s.first == o[1] && g_s.second[1] == o[2]){
-                        cout << g_s.second[2] << endl;
-                    }
-                }
+        }
+        else if (tokens[0] == "average_mark_student") {
+            Student* student = Person::findStudentByID(tokens[1], people);
+            if (!student) { cout << "invalid student" << endl; continue; }
+            vector<int> marks;
+            for (auto c : classes) {
+                c->collectMarksOfStudent(student->identical_num, marks);
             }
-        }else if(o[0] == "mark_list"){
-            int s = 0;
-            auto c = klass.find(o[1]);
-            if(c == klass.end()){
-                cout << "invalid class "<< endl;
-                s++;
-            }
-            for(auto &v : professor_s){
-                if(v.second != o[1]){
-                    cout << "no professor" << endl;
-                    s++;
-                }
-            }
-            for(auto &r : student_s){
-                if(r.second != o[1]){
-                    cout << "no student" << endl;
-                    s++;
-                }
-            }
-            if(s == 0){
-                for(auto &z : student_s){
-                    int d = 0;
-                    if(z.second == o[1]){
-                        for(auto &x : garde){
-                            if(x.first == z.first && x.second[1] == o[1]){
-                                cout << x.second[2] << " ";
-                                d++;
-                            }
-                        }
-                        if(d == 0){
-                            cout << "None" << " ";
-                        }
-                    }
-                }
-                cout << endl;
-            }
-        }else if(o[0] == "average_mark_professor"){
-            int d = 0,t=0;
-            double sum=0;
-            auto p = professor.find(o[1]);
-            if(p == professor.end()){
-                cout << "invalid professor"<< endl;
-            }else{
-                for(auto &f : garde){
-                    if(f.second[0] == o[1]){
-                        sum += stoi(f.second[2]);
-                        t++;
-                    }
-                }
-                if(t == 0){
-                    cout << "None" << endl;
-                }else{
-                    cout << fixed << setprecision(2) << sum / t << endl;
-                }
-            }
-        }else if(o[0] == "average_mark_student"){
-            int t=0;
-            double sum=0;
-            auto s = student.find(o[1]);
-            if(s == student.end()){
-                cout << "invalid student"<< endl;
-            }else{
-                for(auto &k : garde){
-                    if(k.first == o[1]){
-                        sum += stoi(k.second[2]);
-                        t++;
-                    }
-                }
-                if(t == 0){
-                    cout << "None" << endl;
-                }else{
-                    top_grade.insert(pair<string,string>(o[1],to_string(sum/t)));
-                    cout << fixed << setprecision(2) << sum / t << endl;
-                }
-            }
-        }else if(o[0] == "top_student"){
-            int t=0;
-            double sum=0;
-            int top_top=0,m=0;
-            pair<string,vector<string>> top_guy;
-            for(auto &s : student){
-                if(s.second[2] == o[1] && s.second[1] == o[2]){
-                    for(auto &k : garde){
-                        if(k.first == s.first){
-                            sum += stoi(k.second[2]);
-                            t++;
-                        }
-                    }
-                    double avg = sum/t;
-                    if( top_top <= avg){
-                        top_top = avg;
-                        top_guy = s;
-                    }
-                    m++;
-                }
-            }
-            if(m == 0){
+            if (marks.empty()) {
                 cout << "None" << endl;
-            }else{
-                cout << top_guy.second[0] << endl;
+            } else {
+                double sum = 0;
+                for (int m : marks) sum += m;
+                cout << fixed << setprecision(2) << (sum / marks.size()) << endl;
             }
-        }else if(o[0] == "top_mark"){
-            auto c = klass.find(o[1]);
-            if(c == klass.end()){
-                cout << "invalid class "<< endl;
-            }
-            int q = 0,w = 0;
-            for(auto &t_g : garde){
-                if(t_g.second[1] == o[1] && w < stoi(t_g.second[2])){
-                    w = stoi(t_g.second[2]);
-                    q++;
+        }
+        else if (tokens[0] == "top_student") {
+            string target_field = tokens[1];
+            string target_year = tokens[2];
+
+            string best_name = "None";
+            double best_avg = -1.0;
+
+            for (auto p : people) {
+                Student* s = dynamic_cast<Student*>(p);
+                if (!s) continue;
+                if (s->field != target_field || s->entering_year != target_year) continue;
+
+                vector<int> marks;
+                for (auto c : classes) {
+                    c->collectMarksOfStudent(s->identical_num, marks);
+                }
+                if (marks.empty()) continue;
+
+                double sum = 0;
+                for (int m : marks) sum += m;
+                double avg = sum / marks.size();
+
+                if (avg > best_avg) {
+                    best_avg = avg;
+                    best_name = s->name;
                 }
             }
-            if(q == 0){
-                cout << "None" << endl;
-            }else{
-                cout << w;
+            cout << best_name << endl;
+        }
+        else if (tokens[0] == "top_mark") {
+            Class* class_obj = Class::findClassByID(tokens[1], classes);
+            if (!class_obj) {
+                cout << "invalid class" << endl;
+                continue;
             }
-        }else if(o[0] == "end"){
+            if (class_obj->final_marks.empty()) {
+                cout << "None" << endl;
+            } else {
+                int top = -1;
+                for (auto& [_, m] : class_obj->final_marks) {
+                    if (m > top) top = m;
+                }
+                cout << top << endl;
+            }
+        }
+        else {
             break;
         }
     }
+
+    return 0;
 }
