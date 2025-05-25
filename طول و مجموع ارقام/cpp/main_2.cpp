@@ -22,10 +22,10 @@ int main(){
                     min = i;
                     flagMin = 1;
                     }
-                    max = i;
-                    flagMax = 1;
-                    }
-                    }
-                    cout << min << " " << max;
-                    return 0;
+                max = i;
+                flagMax = 1;
+            }
+        }
+    cout << min << " " << max;
+    return 0;
 }
