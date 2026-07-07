@@ -169,37 +169,6 @@ No external Python packages are required for the current solutions unless a spec
 
 </details>
 
-## Recommended `.gitignore`
-
-To keep the repository clean, the following patterns are recommended:
-
-```gitignore
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.DS_Store
-.vscode/
-.idea/
-
-# Compiled binaries / build outputs
-*.exe
-*.out
-*.o
-*.obj
-*.class
-*.cbp
-*.depend
-*.layout
-bin/
-obj/
-
-# Temporary files
-*.swp
-*.tmp
-*.backup
-```
-
 ## Usage note
 
 Use these solutions as a learning reference. If you are currently solving a problem on Quera or in a contest environment, try to solve it yourself first before checking the implementation.
