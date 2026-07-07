@@ -1,0 +1,31 @@
+@"
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# C/C++ build outputs
+*.exe
+*.out
+*.o
+*.obj
+*.a
+*.so
+*.dll
+
+# Java
+*.class
+
+# IDE / Editor
+.vscode/
+.idea/
+*.cbp
+*.layout
+*.depend
+
+# OS
+.DS_Store
+Thumbs.db
+"@ | Set-Content .gitignore -Encoding UTF8
